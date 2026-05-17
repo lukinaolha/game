@@ -3,8 +3,83 @@
 
 #include <random>
 #include <ctime>
+#include <cmath>
 
-std::vector<int> getRowPattern() {
+Map::Map(
+    unsigned int w,
+    unsigned int h
+)
+    : floorSprite(floorTexture),
+    blockedSprite(blockedTexture),
+    hexW(0.0f),
+    hexH(0.0f),
+    stepX(0.0f),
+    stepY(0.0f),
+    windowWidth(w),
+    windowHeight(h)
+{
+    initThemes();
+    initMap();
+    initSprites();
+}
+
+void Map::initThemes() {
+    themes = {
+        { "stone.png", "lava.png" },
+        { "grass.png", "water.png" },
+        { "sand.png", "cactus.png" }
+    };
+
+    currentTheme = getRandomTheme();
+}
+
+void Map::initMap() {
+    const float GAME_AREA_WIDTH = 850.0f;
+
+    const float baseHexW = 33.0f;
+    const float baseHexH = 25.0f;
+
+    const float baseStepX = 52.0f;
+    const int maxCount = 5;
+
+    float baseMapWidth =
+        (maxCount - 1) * baseStepX + baseHexW;
+
+    float scale =
+        (GAME_AREA_WIDTH * 0.90f) / baseMapWidth;
+
+    hexW = baseHexW * scale;
+    hexH = baseHexH * scale;
+
+    stepX = 48.0f * (hexW / 33.0f);
+    stepY = 12.0f * (hexH / 25.0f);
+
+    float centerX = windowWidth / 2.0f;
+    float startY = 80.0f;
+
+    cells = buildField(centerX, startY);
+
+    // ¬ј∆Ћ»¬ќ:
+    // blocked-кл≥тинки тепер створюЇ GameManager,
+    // бо в≥н знаЇ, де герой ≥ вороги.
+}
+
+void Map::initSprites() {
+    floorTexture =
+        loadTextureTransparentBlack(
+            currentTheme.floorTextureFile
+        );
+
+    blockedTexture =
+        loadTextureTransparentBlack(
+            currentTheme.blockedTextureFile
+        );
+
+    setupSprite(floorSprite, floorTexture);
+    setupSprite(blockedSprite, blockedTexture);
+}
+
+std::vector<int> Map::getRowPattern() {
     return {
         1,
         2,
@@ -30,17 +105,12 @@ std::vector<int> getRowPattern() {
     };
 }
 
-std::vector<HexCell> buildField(
+std::vector<HexCell> Map::buildField(
     float centerX,
-    float startY,
-    float hexW,
-    float hexH
+    float startY
 ) {
-    std::vector<HexCell> cells;
+    std::vector<HexCell> result;
     std::vector<int> pattern = getRowPattern();
-
-    float stepX = 48.0f * (hexW / 33.0f);
-    float stepY = 12.0f * (hexH / 25.0f);
 
     for (int row = 0; row < (int)pattern.size(); row++) {
         int count = pattern[row];
@@ -58,17 +128,14 @@ std::vector<HexCell> buildField(
             cell.x = startX + i * stepX;
             cell.y = startY + row * stepY;
 
-            cells.push_back(cell);
+            result.push_back(cell);
         }
     }
 
-    return cells;
+    return result;
 }
 
-void randomizeBlocked(
-    std::vector<HexCell>& cells,
-    int blockedCount
-) {
+void Map::randomizeBlocked(int blockedCount) {
     for (auto& cell : cells) {
         cell.blocked = false;
     }
@@ -96,9 +163,7 @@ void randomizeBlocked(
     }
 }
 
-MapTheme getRandomTheme(
-    const std::vector<MapTheme>& themes
-) {
+MapTheme Map::getRandomTheme() {
     static std::mt19937 rng((unsigned)std::time(nullptr));
 
     std::uniform_int_distribution<int> dist(
@@ -109,11 +174,9 @@ MapTheme getRandomTheme(
     return themes[dist(rng)];
 }
 
-void setupSprite(
+void Map::setupSprite(
     sf::Sprite& sprite,
-    const sf::Texture& texture,
-    float hexW,
-    float hexH
+    const sf::Texture& texture
 ) {
     sprite.setTexture(texture, true);
 
@@ -128,34 +191,160 @@ void setupSprite(
         });
 }
 
-void applyTheme(
-    const MapTheme& theme,
-    sf::Texture& floorTexture,
-    sf::Texture& blockedTexture,
-    sf::Sprite& floorSprite,
-    sf::Sprite& blockedSprite,
-    float hexW,
-    float hexH
-) {
-    floorTexture = loadTextureTransparentBlack(
-        theme.floorTextureFile
-    );
+void Map::applyTheme(const MapTheme& theme) {
+    floorTexture =
+        loadTextureTransparentBlack(
+            theme.floorTextureFile
+        );
 
-    blockedTexture = loadTextureTransparentBlack(
-        theme.blockedTextureFile
-    );
+    blockedTexture =
+        loadTextureTransparentBlack(
+            theme.blockedTextureFile
+        );
 
-    setupSprite(
-        floorSprite,
-        floorTexture,
-        hexW,
-        hexH
-    );
+    setupSprite(floorSprite, floorTexture);
+    setupSprite(blockedSprite, blockedTexture);
+}
 
-    setupSprite(
-        blockedSprite,
-        blockedTexture,
-        hexW,
-        hexH
-    );
+void Map::changeTheme() {
+    currentTheme = getRandomTheme();
+    applyTheme(currentTheme);
+}
+
+void Map::render(sf::RenderWindow& window) {
+    for (const auto& cell : cells) {
+        if (cell.blocked) {
+            blockedSprite.setPosition({
+                cell.x,
+                cell.y
+                });
+
+            window.draw(blockedSprite);
+        }
+        else {
+            floorSprite.setPosition({
+                cell.x,
+                cell.y
+                });
+
+            window.draw(floorSprite);
+        }
+    }
+}
+
+int Map::getCellIndexByMouse(sf::Vector2f mousePos) const {
+    int closestIndex = -1;
+    float closestDistance = 999999.0f;
+
+    for (int i = 0; i < (int)cells.size(); i++) {
+        float dx = mousePos.x - cells[i].x;
+        float dy = mousePos.y - cells[i].y;
+
+        float distance = std::sqrt(dx * dx + dy * dy);
+
+        if (distance < closestDistance) {
+            closestDistance = distance;
+            closestIndex = i;
+        }
+    }
+
+    if (closestDistance > hexW * 0.65f) {
+        return -1;
+    }
+
+    return closestIndex;
+}
+
+bool Map::isCellBlocked(int index) const {
+    if (index < 0 || index >= (int)cells.size()) {
+        return true;
+    }
+
+    return cells[index].blocked;
+}
+
+void Map::setCellBlocked(int index, bool value) {
+    if (index < 0 || index >= (int)cells.size()) {
+        return;
+    }
+
+    cells[index].blocked = value;
+}
+
+bool Map::areCellsNeighbours(
+    int firstIndex,
+    int secondIndex
+) const {
+    if (firstIndex < 0 || secondIndex < 0) {
+        return false;
+    }
+
+    if (firstIndex >= (int)cells.size() ||
+        secondIndex >= (int)cells.size()) {
+        return false;
+    }
+
+    if (firstIndex == secondIndex) {
+        return false;
+    }
+
+    float distance =
+        getDistanceBetweenCells(
+            firstIndex,
+            secondIndex
+        );
+
+    float neighbourDistance =
+        std::sqrt(
+            (stepX / 2.0f) * (stepX / 2.0f) +
+            stepY * stepY
+        );
+
+    return distance <= neighbourDistance * 1.25f;
+}
+
+std::vector<int> Map::getNeighbourCells(int index) const {
+    std::vector<int> result;
+
+    if (index < 0 || index >= (int)cells.size()) {
+        return result;
+    }
+
+    for (int i = 0; i < (int)cells.size(); i++) {
+        if (areCellsNeighbours(index, i)) {
+            result.push_back(i);
+        }
+    }
+
+    return result;
+}
+
+float Map::getDistanceBetweenCells(
+    int firstIndex,
+    int secondIndex
+) const {
+    if (firstIndex < 0 || secondIndex < 0) {
+        return 999999.0f;
+    }
+
+    if (firstIndex >= (int)cells.size() ||
+        secondIndex >= (int)cells.size()) {
+        return 999999.0f;
+    }
+
+    float dx =
+        cells[firstIndex].x - cells[secondIndex].x;
+
+    float dy =
+        cells[firstIndex].y - cells[secondIndex].y;
+
+    return std::sqrt(dx * dx + dy * dy);
+}
+
+const HexCell& Map::getCell(int index) const {
+    return cells[index];
+}
+
+int Map::getCellsCount() const {
+    return (int)cells.size();
 }

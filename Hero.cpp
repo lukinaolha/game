@@ -1,66 +1,92 @@
 #include "Hero.h"
+#include "TextureUtils.h"
 
-#include <iostream>
-#include <algorithm>
+Hero::Hero(
+    const std::string& textureFile,
+    int startCellIndex
+)
+    : currentCellIndex(startCellIndex),
+    hp(5),
+    damage(1),
+    alive(true),
+    sprite(texture)
+{
+    texture = loadTextureTransparentBlack(textureFile);
 
-Hero::Hero()
-    : cellIndex(0),
-    sprite(texture) {
-}
+    sprite.setTexture(texture, true);
 
-void setupHero(
-    Hero& hero,
-    const std::string& filename,
-    float hexW,
-    float hexH
-) {
-    if (!hero.texture.loadFromFile(filename)) {
-        std::cout << "Cannot load hero texture: " << filename << std::endl;
-        return;
-    }
-
-    hero.sprite.setTexture(hero.texture, true);
-
-    hero.sprite.setOrigin({
-        hero.texture.getSize().x / 2.0f,
-        hero.texture.getSize().y / 2.0f
+    sprite.setOrigin({
+        texture.getSize().x / 2.0f,
+        texture.getSize().y / 2.0f
         });
 
-    float scaleX = hexW * 0.90f / hero.texture.getSize().x;
-    float scaleY = hexH * 1.00f / hero.texture.getSize().y;
-
-    float scale = std::min(scaleX, scaleY);
-
-    hero.sprite.setScale({
-        scale,
-        scale
+    sprite.setScale({
+        2.50f,
+        2.30f
         });
 }
 
-void placeHeroOnCell(
-    Hero& hero,
-    const std::vector<HexCell>& cells
+void Hero::tryMoveTo(
+    int targetCellIndex,
+    const Map& map
 ) {
-    if (hero.cellIndex < 0 || hero.cellIndex >= (int)cells.size()) {
+    if (!alive) {
         return;
     }
 
-    const HexCell& cell = cells[hero.cellIndex];
+    if (targetCellIndex == -1) {
+        return;
+    }
 
-    hero.sprite.setPosition({
+    if (map.isCellBlocked(targetCellIndex)) {
+        return;
+    }
+
+    if (!map.areCellsNeighbours(
+        currentCellIndex,
+        targetCellIndex
+    )) {
+        return;
+    }
+
+    currentCellIndex = targetCellIndex;
+}
+
+void Hero::takeDamage(int amount) {
+    if (!alive) {
+        return;
+    }
+
+    hp -= amount;
+
+    if (hp <= 0) {
+        alive = false;
+    }
+}
+
+bool Hero::isAlive() const {
+    return alive;
+}
+
+int Hero::getCurrentCellIndex() const {
+    return currentCellIndex;
+}
+
+void Hero::render(
+    sf::RenderWindow& window,
+    const Map& map
+) {
+    if (!alive) {
+        return;
+    }
+
+    const HexCell& cell =
+        map.getCell(currentCellIndex);
+
+    sprite.setPosition({
         cell.x,
         cell.y - 10.0f
         });
-}
 
-void moveHeroToFirstFreeCell(
-    Hero& hero,
-    const std::vector<HexCell>& cells
-) {
-    for (int i = 0; i < (int)cells.size(); i++) {
-        if (!cells[i].blocked) {
-            hero.cellIndex = i;
-            return;
-        }
-    }
+    window.draw(sprite);
 }

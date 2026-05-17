@@ -1,32 +1,39 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
-#include <vector>
 #include <string>
-
 #include "Map.h"
 
-struct Hero {
-    int cellIndex;
+class Hero {
+private:
+    int currentCellIndex;
+
+    int hp;
+    int damage;
+    bool alive;
+
     sf::Texture texture;
     sf::Sprite sprite;
 
-    Hero();
+public:
+    Hero(
+        const std::string& textureFile,
+        int startCellIndex
+    );
+
+    void tryMoveTo(
+        int targetCellIndex,
+        const Map& map
+    );
+
+    void takeDamage(int amount);
+
+    bool isAlive() const;
+
+    int getCurrentCellIndex() const;
+
+    void render(
+        sf::RenderWindow& window,
+        const Map& map
+    );
 };
-
-void setupHero(
-    Hero& hero,
-    const std::string& filename,
-    float hexW,
-    float hexH
-);
-
-void placeHeroOnCell(
-    Hero& hero,
-    const std::vector<HexCell>& cells
-);
-
-void moveHeroToFirstFreeCell(
-    Hero& hero,
-    const std::vector<HexCell>& cells
-);
