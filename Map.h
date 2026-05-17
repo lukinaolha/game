@@ -70,6 +70,8 @@ public:
 
     void changeTheme();
 
+    void setThemeByLevel(int level);
+
     int getCellIndexByMouse(sf::Vector2f mousePos) const;
 
     bool isCellBlocked(int index) const;
@@ -91,4 +93,8 @@ public:
     const HexCell& getCell(int index) const;
 
     int getCellsCount() const;
+
+    float getHexW() const;
+
+    float getHexH() const;
 };

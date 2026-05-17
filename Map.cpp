@@ -25,12 +25,12 @@ Map::Map(
 
 void Map::initThemes() {
     themes = {
-        { "stone.png", "lava.png" },
         { "grass.png", "water.png" },
-        { "sand.png", "cactus.png" }
+        { "sand.png", "cactus.png" },
+        { "stone.png", "lava.png" }
     };
 
-    currentTheme = getRandomTheme();
+    currentTheme = themes[0];
 }
 
 void Map::initMap() {
@@ -58,10 +58,6 @@ void Map::initMap() {
     float startY = 80.0f;
 
     cells = buildField(centerX, startY);
-
-    // ¬ј∆Ћ»¬ќ:
-    // blocked-кл≥тинки тепер створюЇ GameManager,
-    // бо в≥н знаЇ, де герой ≥ вороги.
 }
 
 void Map::initSprites() {
@@ -211,6 +207,29 @@ void Map::changeTheme() {
     applyTheme(currentTheme);
 }
 
+void Map::setThemeByLevel(int level) {
+    if (level <= 5) {
+        currentTheme = {
+            "grass.png",
+            "water.png"
+        };
+    }
+    else if (level <= 10) {
+        currentTheme = {
+            "sand.png",
+            "cactus.png"
+        };
+    }
+    else {
+        currentTheme = {
+            "stone.png",
+            "lava.png"
+        };
+    }
+
+    applyTheme(currentTheme);
+}
+
 void Map::render(sf::RenderWindow& window) {
     for (const auto& cell : cells) {
         if (cell.blocked) {
@@ -347,4 +366,12 @@ const HexCell& Map::getCell(int index) const {
 
 int Map::getCellsCount() const {
     return (int)cells.size();
+}
+
+float Map::getHexW() const {
+    return hexW;
+}
+
+float Map::getHexH() const {
+    return hexH;
 }
