@@ -37,7 +37,7 @@ GameManager::GameManager()
     gameAreaLeft =
         (window.getSize().x - gameAreaWidth) / 2.0f;
 
-    if (font.openFromFile("arial.ttf")) {
+    if (font.openFromFile("GILSANUB.ttf")) {
         fontLoaded = true;
     }
     else {

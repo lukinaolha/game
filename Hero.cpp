@@ -168,9 +168,9 @@ void Hero::renderStatusPanel(
         return;
     }
 
-    const float heartScale = 4.0f;
-    const float heartSpacing = 32.0f;
-    const float gapUnderMap = 35.0f;
+    const float heartScale = 5.0f;
+    const float heartSpacing = 1.0f;
+    const float gapUnderMap = 20.0f;
 
     float heartWidth =
         fullHeartTexture.getSize().x * heartScale;
@@ -235,17 +235,17 @@ void Hero::renderStatusPanel(
         panelY
         });
 
-    panel.setFillColor(sf::Color(42, 36, 74, 230));
-    panel.setOutlineColor(sf::Color(170, 175, 220));
+    panel.setFillColor(sf::Color(93, 0, 0, 255));
+    panel.setOutlineColor(sf::Color(93, 0, 0, 255));
     panel.setOutlineThickness(3.0f);
 
     window.draw(panel);
 
     float heartsStartX =
-        mapCenterX - heartsTotalWidth / 2.0f;
+        mapCenterX - heartsTotalWidth / 2.0f + 17.0f;
 
     float heartsStartY =
-        panelY + 12.0f;
+        panelY + 1.0f;
 
     for (int i = 0; i < maxHp; i++) {
         sf::Sprite heartSprite(
@@ -271,11 +271,11 @@ void Hero::renderStatusPanel(
         sf::Text attackText(font);
 
         attackText.setString(
-            "Attack: " + std::to_string(damage)
+            "attack: " + std::to_string(damage)
         );
 
-        attackText.setCharacterSize(26);
-        attackText.setFillColor(sf::Color(245, 245, 255));
+        attackText.setCharacterSize(30);
+        attackText.setFillColor(sf::Color(0, 0, 0));
 
         sf::FloatRect attackBounds =
             attackText.getLocalBounds();
@@ -286,8 +286,8 @@ void Hero::renderStatusPanel(
             });
 
         attackText.setPosition({
-            mapCenterX,
-            panelY + 112.0f
+            panelX + 70.0f,
+            panelY + 30.0f
             });
 
         window.draw(attackText);
@@ -296,12 +296,12 @@ void Hero::renderStatusPanel(
             sf::Text timerText(font);
 
             timerText.setString(
-                "Boost: " +
+                "boost: " +
                 std::to_string(getAttackBoostRemainingSeconds()) +
                 "s"
             );
 
-            timerText.setCharacterSize(20);
+            timerText.setCharacterSize(30);
             timerText.setFillColor(sf::Color(255, 220, 120));
 
             sf::FloatRect timerBounds =
@@ -313,8 +313,8 @@ void Hero::renderStatusPanel(
                 });
 
             timerText.setPosition({
-                mapCenterX,
-                panelY + 145.0f
+                panelX + 180.0f,
+                panelY + 30.0f
                 });
 
             window.draw(timerText);
