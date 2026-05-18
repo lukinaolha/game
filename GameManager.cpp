@@ -22,7 +22,6 @@ GameManager::GameManager()
     fontLoaded(false),
     currentLevel(1),
     maxLevel(15),
-    backgroundColor(sf::Color::Black),
     gameAreaWidth(850.0f),
     gameAreaLeft(0.0f),
     stairsVisible(false),
@@ -30,7 +29,10 @@ GameManager::GameManager()
     stairsSprite(stairsTexture),
     chestVisible(false),
     chestCellIndex(-1),
-    chestSprite(chestTexture)
+    chestSprite(chestTexture),
+    rewardPopupVisible(false),
+    rewardPopupTitle(""),
+    rewardPopupText("")
 {
     window.setFramerateLimit(60);
 
@@ -41,7 +43,7 @@ GameManager::GameManager()
         fontLoaded = true;
     }
     else {
-        std::cout << "Cannot load font file: arial.ttf" << std::endl;
+        std::cout << "Cannot load font file: GILSANUB.ttf" << std::endl;
     }
 
     if (!stairsTexture.loadFromFile("stairs.png")) {
@@ -94,7 +96,7 @@ void GameManager::prepareLevel() {
     chestVisible = false;
     chestCellIndex = -1;
 
-    updateBackgroundColor();
+    closeRewardPopup();
 
     map.setThemeByLevel(currentLevel);
 
@@ -121,52 +123,6 @@ void GameManager::goToNextLevel() {
     prepareLevel();
 }
 
-void GameManager::updateBackgroundColor() {
-    if (currentLevel <= 5) {
-        // трава: 29494AFF
-        backgroundColor = sf::Color(
-            0x29,
-            0x49,
-            0x4A,
-            0xFF
-        );
-    }
-    else if (currentLevel <= 10) {
-        // темніша пустеля
-        backgroundColor = sf::Color(
-            0xC4,
-            0x7A,
-            0x3A,
-            0xFF
-        );
-    }
-    else {
-        // камінь: 322947FF
-        backgroundColor = sf::Color(
-            0x32,
-            0x29,
-            0x47,
-            0xFF
-        );
-    }
-}
-
-void GameManager::renderGameAreaBackground() {
-    sf::RectangleShape gameArea({
-        gameAreaWidth,
-        static_cast<float>(window.getSize().y)
-        });
-
-    gameArea.setPosition({
-        gameAreaLeft,
-        0.0f
-        });
-
-    gameArea.setFillColor(backgroundColor);
-
-    window.draw(gameArea);
-}
-
 void GameManager::processEvents() {
     while (const std::optional event = window.pollEvent()) {
         if (event->is<sf::Event::Closed>()) {
@@ -175,6 +131,16 @@ void GameManager::processEvents() {
 
         if (const auto* keyPressed =
             event->getIf<sf::Event::KeyPressed>()) {
+
+            if (rewardPopupVisible) {
+                if (keyPressed->code == sf::Keyboard::Key::Enter ||
+                    keyPressed->code == sf::Keyboard::Key::Space ||
+                    keyPressed->code == sf::Keyboard::Key::Escape) {
+                    closeRewardPopup();
+                }
+
+                continue;
+            }
 
             if (keyPressed->code == sf::Keyboard::Key::Escape) {
                 window.close();
@@ -193,6 +159,11 @@ void GameManager::processEvents() {
             event->getIf<sf::Event::MouseButtonPressed>()) {
 
             if (mousePressed->button == sf::Mouse::Button::Left) {
+                if (rewardPopupVisible) {
+                    closeRewardPopup();
+                    continue;
+                }
+
                 sf::Vector2f mousePos =
                     window.mapPixelToCoords({
                         mousePressed->position.x,
@@ -220,6 +191,10 @@ void GameManager::processEvents() {
                         clickedEnemy->takeDamage(
                             hero.getDamage()
                         );
+
+                        if (clickedEnemy->isAlive()) {
+                            clickedEnemy->freeze();
+                        }
 
                         updateEnemies();
                     }
@@ -261,32 +236,31 @@ void GameManager::update() {
 }
 
 void GameManager::render() {
-    // весь екран чорний
-    window.clear(sf::Color::Black);
-
-    // по центру кольоровий фон гри
-    renderGameAreaBackground();
-
-    map.render(window);
-
-    renderChest();
-
-    renderStairs();
-
-    for (auto& enemy : enemies) {
-        enemy->render(window, map);
-    }
-
-    hero.render(window, map);
-
-    hero.renderStatusPanel(
+    GameRenderer::render(
         window,
         map,
-        font,
-        fontLoaded
-    );
+        hero,
+        enemies,
 
-    window.display();
+        chestSprite,
+        chestVisible,
+        chestCellIndex,
+
+        stairsSprite,
+        stairsVisible,
+        stairsCellIndex,
+
+        font,
+        fontLoaded,
+
+        gameAreaWidth,
+        gameAreaLeft,
+        currentLevel,
+
+        rewardPopupVisible,
+        rewardPopupTitle,
+        rewardPopupText
+    );
 }
 
 EnemyType GameManager::getEnemyTypeForCurrentLevel() const {
@@ -313,28 +287,41 @@ std::string GameManager::getEnemyTextureForCurrentLevel() const {
     return "demon.png";
 }
 
+int GameManager::getEnemyCountForCurrentLevel() const {
+    if (currentLevel <= 5) {
+        return 5;
+    }
+
+    if (currentLevel <= 10) {
+        return 4;
+    }
+
+    return 3;
+}
+
 void GameManager::spawnEnemies() {
     enemies.clear();
 
     static std::mt19937 rng((unsigned)std::time(nullptr));
 
-    const int enemyCount = 5;
+    int enemyCount =
+        getEnemyCountForCurrentLevel();
 
-    std::uniform_int_distribution<int> cellDist(
+    EnemyType enemyType =
+        getEnemyTypeForCurrentLevel();
+
+    std::string textureFile =
+        getEnemyTextureForCurrentLevel();
+
+    std::uniform_int_distribution<int> dist(
         0,
         map.getCellsCount() - 1
     );
 
     int placed = 0;
 
-    EnemyType enemyType =
-        getEnemyTypeForCurrentLevel();
-
-    std::string enemyTexture =
-        getEnemyTextureForCurrentLevel();
-
     while (placed < enemyCount) {
-        int cellIndex = cellDist(rng);
+        int cellIndex = dist(rng);
 
         if (cellIndex == hero.getCurrentCellIndex()) {
             continue;
@@ -351,7 +338,7 @@ void GameManager::spawnEnemies() {
         enemies.push_back(
             std::make_unique<Enemy>(
                 enemyType,
-                enemyTexture,
+                textureFile,
                 cellIndex
             )
         );
@@ -411,31 +398,47 @@ void GameManager::collectChest() {
 
     if (reward == 0) {
         hero.healFull();
+
+        showRewardPopup(
+            "Chest reward",
+            "Your health was fully restored!"
+        );
+
         std::cout << "Chest reward: full HP restored" << std::endl;
     }
     else if (reward == 1) {
         hero.activateAttackBoost();
+
+        showRewardPopup(
+            "Chest reward",
+            "Attack increased by +1\nfor 60 seconds!"
+        );
+
         std::cout << "Chest reward: attack +1 for 60 seconds" << std::endl;
     }
     else {
+        showRewardPopup(
+            "Chest reward",
+            "The chest was empty..."
+        );
+
         std::cout << "Chest reward: empty" << std::endl;
     }
 }
 
-void GameManager::renderChest() {
-    if (!chestVisible || chestCellIndex == -1) {
-        return;
-    }
+void GameManager::showRewardPopup(
+    const std::string& title,
+    const std::string& text
+) {
+    rewardPopupVisible = true;
+    rewardPopupTitle = title;
+    rewardPopupText = text;
+}
 
-    const HexCell& cell =
-        map.getCell(chestCellIndex);
-
-    chestSprite.setPosition({
-        cell.x,
-        cell.y
-        });
-
-    window.draw(chestSprite);
+void GameManager::closeRewardPopup() {
+    rewardPopupVisible = false;
+    rewardPopupTitle = "";
+    rewardPopupText = "";
 }
 
 void GameManager::spawnStairs() {
@@ -475,22 +478,6 @@ void GameManager::spawnStairs() {
 
         return;
     }
-}
-
-void GameManager::renderStairs() {
-    if (!stairsVisible || stairsCellIndex == -1) {
-        return;
-    }
-
-    const HexCell& cell =
-        map.getCell(stairsCellIndex);
-
-    stairsSprite.setPosition({
-        cell.x,
-        cell.y
-        });
-
-    window.draw(stairsSprite);
 }
 
 bool GameManager::areAllEnemiesDead() const {
@@ -542,12 +529,18 @@ std::vector<int> GameManager::getOccupiedEnemyCells() const {
 
     for (const auto& enemy : enemies) {
         if (enemy->isAlive()) {
-            occupied.push_back(enemy->getCurrentCellIndex());
+            occupied.push_back(
+                enemy->getCurrentCellIndex()
+            );
         }
     }
 
     if (chestVisible && chestCellIndex != -1) {
         occupied.push_back(chestCellIndex);
+    }
+
+    if (stairsVisible && stairsCellIndex != -1) {
+        occupied.push_back(stairsCellIndex);
     }
 
     return occupied;

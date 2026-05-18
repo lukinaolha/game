@@ -16,7 +16,8 @@ Map::Map(
     stepX(0.0f),
     stepY(0.0f),
     windowWidth(w),
-    windowHeight(h)
+    windowHeight(h),
+    currentThemeIndex(0)
 {
     initThemes();
     initMap();
@@ -167,7 +168,9 @@ MapTheme Map::getRandomTheme() {
         (int)themes.size() - 1
     );
 
-    return themes[dist(rng)];
+    currentThemeIndex = dist(rng);
+
+    return themes[currentThemeIndex];
 }
 
 void Map::setupSprite(
@@ -209,18 +212,24 @@ void Map::changeTheme() {
 
 void Map::setThemeByLevel(int level) {
     if (level <= 5) {
+        currentThemeIndex = 0;
+
         currentTheme = {
             "grass.png",
             "water.png"
         };
     }
     else if (level <= 10) {
+        currentThemeIndex = 1;
+
         currentTheme = {
             "sand.png",
             "cactus.png"
         };
     }
     else {
+        currentThemeIndex = 2;
+
         currentTheme = {
             "stone.png",
             "lava.png"
@@ -374,4 +383,8 @@ float Map::getHexW() const {
 
 float Map::getHexH() const {
     return hexH;
+}
+
+int Map::getCurrentThemeIndex() const {
+    return currentThemeIndex;
 }

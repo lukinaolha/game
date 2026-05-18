@@ -36,6 +36,7 @@ private:
 
     unsigned int windowWidth;
     unsigned int windowHeight;
+    int currentThemeIndex;
 
 private:
     void initThemes();
@@ -93,6 +94,8 @@ public:
     const HexCell& getCell(int index) const;
 
     int getCellsCount() const;
+
+    int getCurrentThemeIndex() const;
 
     float getHexW() const;
 

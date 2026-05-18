@@ -8,6 +8,7 @@
 #include "Map.h"
 #include "Hero.h"
 #include "Enemy.h"
+#include "GameRenderer.h"
 
 class GameManager {
 private:
@@ -24,9 +25,6 @@ private:
     int currentLevel;
     const int maxLevel;
 
-    sf::Color backgroundColor;
-
-    // нове: центральна ігрова зона
     float gameAreaWidth;
     float gameAreaLeft;
 
@@ -42,6 +40,10 @@ private:
     sf::Texture chestTexture;
     sf::Sprite chestSprite;
 
+    bool rewardPopupVisible;
+    std::string rewardPopupTitle;
+    std::string rewardPopupText;
+
 private:
     void processEvents();
     void update();
@@ -50,23 +52,26 @@ private:
     void prepareLevel();
     void goToNextLevel();
 
-    void updateBackgroundColor();
-    void renderGameAreaBackground();
-
     void spawnEnemies();
     void updateEnemies();
 
     void spawnStairs();
-    void renderStairs();
 
     void spawnChest();
-    void renderChest();
     void collectChest();
+
+    void showRewardPopup(
+        const std::string& title,
+        const std::string& text
+    );
+
+    void closeRewardPopup();
 
     bool areAllEnemiesDead() const;
 
     EnemyType getEnemyTypeForCurrentLevel() const;
     std::string getEnemyTextureForCurrentLevel() const;
+    int getEnemyCountForCurrentLevel() const;
 
     bool isEnemyOnCell(int cellIndex) const;
     Enemy* getEnemyOnCell(int cellIndex);

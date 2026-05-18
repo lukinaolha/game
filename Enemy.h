@@ -21,6 +21,7 @@ private:
     int hp;
     int damage;
     bool alive;
+    bool frozen;
 
     int moveCooldown;
 
@@ -66,6 +67,9 @@ public:
     bool isAlive() const;
 
     void takeDamage(int amount);
+
+    void freeze();
+    bool isFrozen() const;
 
     bool isNearHero(
         int heroCellIndex,

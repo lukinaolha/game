@@ -14,6 +14,7 @@ Enemy::Enemy(
     hp(1),
     damage(1),
     alive(true),
+    frozen(false),
     moveCooldown(0),
     offsetX(0.0f),
     offsetY(-10.0f),
@@ -37,7 +38,7 @@ void Enemy::initByType(const std::string& textureFile) {
         offsetY = +5.0f;
     }
     else if (type == EnemyType::Skeleton) {
-        hp = 1;
+        hp = 2;
         damage = 1;
         moveCooldown = 0;
 
@@ -48,7 +49,7 @@ void Enemy::initByType(const std::string& textureFile) {
         offsetY = -5.0f;
     }
     else if (type == EnemyType::Demon) {
-        hp = 1;
+        hp = 3;
         damage = 2;
         moveCooldown = 0;
 
@@ -84,6 +85,18 @@ int Enemy::getCurrentCellIndex() const {
 
 bool Enemy::isAlive() const {
     return alive;
+}
+
+void Enemy::freeze() {
+    if (!alive) {
+        return;
+    }
+
+    frozen = true;
+}
+
+bool Enemy::isFrozen() const {
+    return frozen;
 }
 
 void Enemy::takeDamage(int amount) {
@@ -213,6 +226,11 @@ void Enemy::updateAI(
         return;
     }
 
+    if (frozen) {
+        frozen = false;
+        return;
+    }
+
     if (isNearHero(heroCellIndex, map)) {
         return;
     }
@@ -273,6 +291,11 @@ void Enemy::updateAI(
 
 void Enemy::attackHero(Hero& hero) {
     if (!alive) {
+        return;
+    }
+
+    if (frozen) {
+        frozen = false;
         return;
     }
 
