@@ -1,9 +1,20 @@
 #include "GameRenderer.h"
 
+#include <iostream>
+
+sf::Texture GameRenderer::menuBackgroundTexture;
+sf::Sprite GameRenderer::menuBackgroundSprite(menuBackgroundTexture);
+
+sf::Texture GameRenderer::startButtonTexture;
+sf::Sprite GameRenderer::startButtonSprite(startButtonTexture);
+
+sf::Texture GameRenderer::exitButtonTexture;
+sf::Sprite GameRenderer::exitButtonSprite(exitButtonTexture);
+
 namespace RenderColors {
-    const sf::Color GrassBackground(180, 180, 180, 120);
-    const sf::Color DesertBackground(196, 122, 58, 255);
-    const sf::Color StoneBackground(50, 41, 71, 255);
+    const sf::Color GrassBackground(0, 0, 0, 255);
+    const sf::Color DesertBackground(0, 0, 0, 255);
+    const sf::Color StoneBackground(0, 0, 0, 255);
 
     const sf::Color PopupOverlay(0, 0, 0, 180);
     const sf::Color PopupBackground(25, 25, 25, 245);
@@ -12,6 +23,101 @@ namespace RenderColors {
     const sf::Color TextWhite(255, 255, 255, 255);
 
     const sf::Color OkButton(93, 0, 0, 255);
+}
+
+void GameRenderer::initMenu(
+    unsigned int windowWidth,
+    unsigned int windowHeight
+) {
+    if (!menuBackgroundTexture.loadFromFile("menu_background.png")) {
+        std::cout << "Cannot load menu_background.png" << std::endl;
+    }
+
+    menuBackgroundSprite.setTexture(menuBackgroundTexture, true);
+
+    float backgroundScaleX =
+        static_cast<float>(windowWidth) /
+        menuBackgroundTexture.getSize().x;
+
+    float backgroundScaleY =
+        static_cast<float>(windowHeight) /
+        menuBackgroundTexture.getSize().y;
+
+    menuBackgroundSprite.setScale({
+        backgroundScaleX,
+        backgroundScaleY
+        });
+
+    if (!startButtonTexture.loadFromFile("start.png")) {
+        std::cout << "Cannot load start.png" << std::endl;
+    }
+
+    startButtonSprite.setTexture(startButtonTexture, true);
+
+    if (!exitButtonTexture.loadFromFile("exit.png")) {
+        std::cout << "Cannot load exit.png" << std::endl;
+    }
+
+    exitButtonSprite.setTexture(exitButtonTexture, true);
+
+    float buttonScale = 5.0f;
+
+    startButtonSprite.setScale({
+        buttonScale,
+        buttonScale
+        });
+
+    exitButtonSprite.setScale({
+        buttonScale,
+        buttonScale
+        });
+
+    sf::FloatRect startBounds =
+        startButtonSprite.getGlobalBounds();
+
+    sf::FloatRect exitBounds =
+        exitButtonSprite.getGlobalBounds();
+
+    float centerX =
+        static_cast<float>(windowWidth) / 2.0f;
+
+    startButtonSprite.setPosition({
+        centerX - startBounds.size.x / 2.0f,
+        static_cast<float>(windowHeight) * 0.58f
+        });
+
+    exitButtonSprite.setPosition({
+        centerX - exitBounds.size.x / 2.0f,
+        static_cast<float>(windowHeight) * 0.70f
+        });
+}
+
+void GameRenderer::renderMenu(
+    sf::RenderWindow& window
+) {
+    window.clear(sf::Color::Black);
+
+    window.draw(menuBackgroundSprite);
+    window.draw(startButtonSprite);
+    window.draw(exitButtonSprite);
+
+    window.display();
+}
+
+bool GameRenderer::isStartButtonClicked(
+    sf::Vector2f mousePos
+) {
+    return startButtonSprite
+        .getGlobalBounds()
+        .contains(mousePos);
+}
+
+bool GameRenderer::isExitButtonClicked(
+    sf::Vector2f mousePos
+) {
+    return exitButtonSprite
+        .getGlobalBounds()
+        .contains(mousePos);
 }
 
 sf::Color GameRenderer::getBackgroundColorForLevel(
@@ -60,7 +166,8 @@ void GameRenderer::renderObjectOnCell(
         return;
     }
 
-    const HexCell& cell = map.getCell(cellIndex);
+    const HexCell& cell =
+        map.getCell(cellIndex);
 
     sprite.setPosition({
         cell.x,

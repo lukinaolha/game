@@ -14,6 +14,7 @@ GameManager::GameManager()
         "Turn-Based Strategy",
         sf::State::Fullscreen
     ),
+    currentState(GameState::Menu),
     map(
         sf::VideoMode::getDesktopMode().size.x,
         sf::VideoMode::getDesktopMode().size.y
@@ -35,6 +36,11 @@ GameManager::GameManager()
     rewardPopupText("")
 {
     window.setFramerateLimit(60);
+
+    GameRenderer::initMenu(
+        window.getSize().x,
+        window.getSize().y
+    );
 
     gameAreaLeft =
         (window.getSize().x - gameAreaWidth) / 2.0f;
@@ -132,6 +138,14 @@ void GameManager::processEvents() {
         if (const auto* keyPressed =
             event->getIf<sf::Event::KeyPressed>()) {
 
+            if (currentState == GameState::Menu) {
+                if (keyPressed->code == sf::Keyboard::Key::Escape) {
+                    window.close();
+                }
+
+                continue;
+            }
+
             if (rewardPopupVisible) {
                 if (keyPressed->code == sf::Keyboard::Key::Enter ||
                     keyPressed->code == sf::Keyboard::Key::Space ||
@@ -159,16 +173,28 @@ void GameManager::processEvents() {
             event->getIf<sf::Event::MouseButtonPressed>()) {
 
             if (mousePressed->button == sf::Mouse::Button::Left) {
-                if (rewardPopupVisible) {
-                    closeRewardPopup();
-                    continue;
-                }
-
                 sf::Vector2f mousePos =
                     window.mapPixelToCoords({
                         mousePressed->position.x,
                         mousePressed->position.y
                         });
+
+                if (currentState == GameState::Menu) {
+                    if (GameRenderer::isStartButtonClicked(mousePos)) {
+                        currentState = GameState::Playing;
+                    }
+
+                    if (GameRenderer::isExitButtonClicked(mousePos)) {
+                        window.close();
+                    }
+
+                    continue;
+                }
+
+                if (rewardPopupVisible) {
+                    closeRewardPopup();
+                    continue;
+                }
 
                 int clickedCell =
                     map.getCellIndexByMouse(mousePos);
@@ -223,6 +249,10 @@ void GameManager::processEvents() {
 }
 
 void GameManager::update() {
+    if (currentState == GameState::Menu) {
+        return;
+    }
+
     if (!hero.isAlive()) {
         window.close();
         return;
@@ -236,6 +266,11 @@ void GameManager::update() {
 }
 
 void GameManager::render() {
+    if (currentState == GameState::Menu) {
+        GameRenderer::renderMenu(window);
+        return;
+    }
+
     GameRenderer::render(
         window,
         map,

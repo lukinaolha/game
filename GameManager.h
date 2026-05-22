@@ -10,9 +10,16 @@
 #include "Enemy.h"
 #include "GameRenderer.h"
 
+enum class GameState {
+    Menu,
+    Playing
+};
+
 class GameManager {
 private:
     sf::RenderWindow window;
+
+    GameState currentState;
 
     Map map;
     Hero hero;

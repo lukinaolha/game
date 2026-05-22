@@ -11,6 +11,16 @@
 
 class GameRenderer {
 private:
+    static sf::Texture menuBackgroundTexture;
+    static sf::Sprite menuBackgroundSprite;
+
+    static sf::Texture startButtonTexture;
+    static sf::Sprite startButtonSprite;
+
+    static sf::Texture exitButtonTexture;
+    static sf::Sprite exitButtonSprite;
+
+private:
     static sf::Color getBackgroundColorForLevel(
         int currentLevel
     );
@@ -40,6 +50,23 @@ private:
     );
 
 public:
+    static void initMenu(
+        unsigned int windowWidth,
+        unsigned int windowHeight
+    );
+
+    static void renderMenu(
+        sf::RenderWindow& window
+    );
+
+    static bool isStartButtonClicked(
+        sf::Vector2f mousePos
+    );
+
+    static bool isExitButtonClicked(
+        sf::Vector2f mousePos
+    );
+
     static void render(
         sf::RenderWindow& window,
         Map& map,

@@ -235,8 +235,8 @@ void Hero::renderStatusPanel(
         panelY
         });
 
-    panel.setFillColor(sf::Color(93, 0, 0, 255));
-    panel.setOutlineColor(sf::Color(93, 0, 0, 255));
+    panel.setFillColor(sf::Color(255, 255, 235, 255));
+    panel.setOutlineColor(sf::Color(255, 255, 235, 255));
     panel.setOutlineThickness(3.0f);
 
     window.draw(panel);
@@ -286,7 +286,7 @@ void Hero::renderStatusPanel(
             });
 
         attackText.setPosition({
-            panelX + 70.0f,
+            panelX + 80.0f,
             panelY + 30.0f
             });
 
@@ -302,7 +302,7 @@ void Hero::renderStatusPanel(
             );
 
             timerText.setCharacterSize(30);
-            timerText.setFillColor(sf::Color(255, 220, 120));
+            timerText.setFillColor(sf::Color(255, 0, 0));
 
             sf::FloatRect timerBounds =
                 timerText.getLocalBounds();
@@ -313,7 +313,7 @@ void Hero::renderStatusPanel(
                 });
 
             timerText.setPosition({
-                panelX + 180.0f,
+                panelX + 280.0f,
                 panelY + 30.0f
                 });
 
