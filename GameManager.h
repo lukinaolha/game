@@ -13,6 +13,7 @@
 
 enum class GameState {
     Menu,
+    Rules,
     Playing,
     Victory,
     GameOver

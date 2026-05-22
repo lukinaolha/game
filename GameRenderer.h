@@ -20,6 +20,18 @@ private:
     static sf::Texture exitButtonTexture;
     static sf::Sprite exitButtonSprite;
 
+    static sf::Texture rulesButtonTexture;
+    static sf::Sprite rulesButtonSprite;
+
+    static sf::Texture zombieRulesTexture;
+    static sf::Sprite zombieRulesSprite;
+
+    static sf::Texture skeletonRulesTexture;
+    static sf::Sprite skeletonRulesSprite;
+
+    static sf::Texture demonRulesTexture;
+    static sf::Sprite demonRulesSprite;
+
     static sf::Texture victoryPanelTexture;
     static sf::Sprite victoryPanelSprite;
 
@@ -70,8 +82,18 @@ public:
         unsigned int windowHeight
     );
 
+    static void updateMenuButtonsHover(
+        sf::Vector2f mousePos
+    );
+
     static void renderMenu(
         sf::RenderWindow& window
+    );
+
+    static void renderRulesScreen(
+        sf::RenderWindow& window,
+        const sf::Font& font,
+        bool fontLoaded
     );
 
     static void initVictory(
@@ -105,6 +127,10 @@ public:
     );
 
     static bool isExitButtonClicked(
+        sf::Vector2f mousePos
+    );
+
+    static bool isRulesButtonClicked(
         sf::Vector2f mousePos
     );
 

@@ -68,7 +68,6 @@ GameManager::GameManager()
         wastedMusic.setLooping(true);
         wastedMusic.setVolume(40.0f);
     }
-    
 
     GameRenderer::initMenu(
         window.getSize().x,
@@ -91,7 +90,6 @@ GameManager::GameManager()
     if (font.openFromFile("GILSANUB.ttf")) {
         fontLoaded = true;
     }
-  
 
     if (!stairsTexture.loadFromFile("stairs.png")) {
         std::cout << "Cannot load stairs.png" << std::endl;
@@ -198,7 +196,6 @@ void GameManager::showVictoryScreen() {
     if (victoryMusicLoaded) {
         victoryMusic.play();
     }
-
 }
 
 void GameManager::showGameOverScreen() {
@@ -229,7 +226,6 @@ void GameManager::showGameOverScreen() {
     if (wastedMusicLoaded) {
         wastedMusic.play();
     }
-
 }
 
 void GameManager::processEvents() {
@@ -244,6 +240,16 @@ void GameManager::processEvents() {
             if (currentState == GameState::Menu) {
                 if (keyPressed->code == sf::Keyboard::Key::Escape) {
                     window.close();
+                }
+
+                continue;
+            }
+
+            if (currentState == GameState::Rules) {
+                if (keyPressed->code == sf::Keyboard::Key::Escape ||
+                    keyPressed->code == sf::Keyboard::Key::Enter ||
+                    keyPressed->code == sf::Keyboard::Key::Space) {
+                    currentState = GameState::Menu;
                 }
 
                 continue;
@@ -323,6 +329,15 @@ void GameManager::processEvents() {
                         window.close();
                     }
 
+                    if (GameRenderer::isRulesButtonClicked(mousePos)) {
+                        currentState = GameState::Rules;
+                    }
+
+                    continue;
+                }
+
+                if (currentState == GameState::Rules) {
+                    currentState = GameState::Menu;
                     continue;
                 }
 
@@ -408,15 +423,10 @@ void GameManager::processEvents() {
 }
 
 void GameManager::update() {
-    if (currentState == GameState::Menu) {
-        return;
-    }
-
-    if (currentState == GameState::Victory) {
-        return;
-    }
-
-    if (currentState == GameState::GameOver) {
+    if (currentState == GameState::Menu ||
+        currentState == GameState::Rules ||
+        currentState == GameState::Victory ||
+        currentState == GameState::GameOver) {
         return;
     }
 
@@ -434,7 +444,23 @@ void GameManager::update() {
 
 void GameManager::render() {
     if (currentState == GameState::Menu) {
+        sf::Vector2i mousePixelPos =
+            sf::Mouse::getPosition(window);
+
+        sf::Vector2f mouseWorldPos =
+            window.mapPixelToCoords(mousePixelPos);
+
+        GameRenderer::updateMenuButtonsHover(mouseWorldPos);
         GameRenderer::renderMenu(window);
+        return;
+    }
+
+    if (currentState == GameState::Rules) {
+        GameRenderer::renderRulesScreen(
+            window,
+            font,
+            fontLoaded
+        );
         return;
     }
 

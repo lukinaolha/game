@@ -1,6 +1,7 @@
 #include "GameRenderer.h"
 
 #include <iostream>
+#include <cmath>
 
 sf::Texture GameRenderer::menuBackgroundTexture;
 sf::Sprite GameRenderer::menuBackgroundSprite(menuBackgroundTexture);
@@ -10,6 +11,18 @@ sf::Sprite GameRenderer::startButtonSprite(startButtonTexture);
 
 sf::Texture GameRenderer::exitButtonTexture;
 sf::Sprite GameRenderer::exitButtonSprite(exitButtonTexture);
+
+sf::Texture GameRenderer::rulesButtonTexture;
+sf::Sprite GameRenderer::rulesButtonSprite(rulesButtonTexture);
+
+sf::Texture GameRenderer::zombieRulesTexture;
+sf::Sprite GameRenderer::zombieRulesSprite(zombieRulesTexture);
+
+sf::Texture GameRenderer::skeletonRulesTexture;
+sf::Sprite GameRenderer::skeletonRulesSprite(skeletonRulesTexture);
+
+sf::Texture GameRenderer::demonRulesTexture;
+sf::Sprite GameRenderer::demonRulesSprite(demonRulesTexture);
 
 sf::Texture GameRenderer::victoryPanelTexture;
 sf::Sprite GameRenderer::victoryPanelSprite(victoryPanelTexture);
@@ -63,42 +76,135 @@ void GameRenderer::initMenu(
 
     startButtonSprite.setTexture(startButtonTexture, true);
 
+    startButtonSprite.setOrigin({
+        startButtonTexture.getSize().x / 2.0f,
+        startButtonTexture.getSize().y / 2.0f
+        });
+
     if (!exitButtonTexture.loadFromFile("exit.png")) {
         std::cout << "Cannot load exit.png" << std::endl;
     }
 
     exitButtonSprite.setTexture(exitButtonTexture, true);
 
-    float buttonScale = 5.0f;
+    exitButtonSprite.setOrigin({
+        exitButtonTexture.getSize().x / 2.0f,
+        exitButtonTexture.getSize().y / 2.0f
+        });
+
+    if (!rulesButtonTexture.loadFromFile("rules.png")) {
+        std::cout << "Cannot load rules.png" << std::endl;
+    }
+
+    rulesButtonSprite.setTexture(rulesButtonTexture, true);
+
+    rulesButtonSprite.setOrigin({
+        rulesButtonTexture.getSize().x / 2.0f,
+        rulesButtonTexture.getSize().y / 2.0f
+        });
+
+    if (!zombieRulesTexture.loadFromFile("zombie.png")) {
+        std::cout << "Cannot load zombie.png" << std::endl;
+    }
+
+    zombieRulesSprite.setTexture(zombieRulesTexture, true);
+    zombieRulesSprite.setOrigin({
+        zombieRulesTexture.getSize().x / 2.0f,
+        zombieRulesTexture.getSize().y / 2.0f
+        });
+
+    if (!skeletonRulesTexture.loadFromFile("skeleton.png")) {
+        std::cout << "Cannot load skeleton.png" << std::endl;
+    }
+
+    skeletonRulesSprite.setTexture(skeletonRulesTexture, true);
+    skeletonRulesSprite.setOrigin({
+        skeletonRulesTexture.getSize().x / 2.0f,
+        skeletonRulesTexture.getSize().y / 2.0f
+        });
+
+    if (!demonRulesTexture.loadFromFile("demon.png")) {
+        std::cout << "Cannot load demon.png" << std::endl;
+    }
+
+    demonRulesSprite.setTexture(demonRulesTexture, true);
+    demonRulesSprite.setOrigin({
+        demonRulesTexture.getSize().x / 2.0f,
+        demonRulesTexture.getSize().y / 2.0f
+        });
+
+    float mainButtonScale = 6.0f;
+    float rulesButtonScale = 4.0f;
 
     startButtonSprite.setScale({
-        buttonScale,
-        buttonScale
+        mainButtonScale,
+        mainButtonScale
         });
 
     exitButtonSprite.setScale({
-        buttonScale,
-        buttonScale
+        mainButtonScale,
+        mainButtonScale
         });
 
-    sf::FloatRect startBounds =
-        startButtonSprite.getGlobalBounds();
-
-    sf::FloatRect exitBounds =
-        exitButtonSprite.getGlobalBounds();
+    rulesButtonSprite.setScale({
+        rulesButtonScale,
+        rulesButtonScale
+        });
 
     float centerX =
         static_cast<float>(windowWidth) / 2.0f;
 
     startButtonSprite.setPosition({
-        centerX - startBounds.size.x / 2.0f,
-        static_cast<float>(windowHeight) * 0.58f
+        centerX,
+        static_cast<float>(windowHeight) * 0.62f
         });
 
     exitButtonSprite.setPosition({
-        centerX - exitBounds.size.x / 2.0f,
-        static_cast<float>(windowHeight) * 0.70f
+        centerX,
+        static_cast<float>(windowHeight) * 0.76f
         });
+
+    rulesButtonSprite.setPosition({
+        static_cast<float>(windowWidth) - 70.0f,
+        static_cast<float>(windowHeight) - 55.0f
+        });
+}
+
+void GameRenderer::updateMenuButtonsHover(
+    sf::Vector2f mousePos
+) {
+    bool startHovered =
+        startButtonSprite
+        .getGlobalBounds()
+        .contains(mousePos);
+
+    bool exitHovered =
+        exitButtonSprite
+        .getGlobalBounds()
+        .contains(mousePos);
+
+    bool rulesHovered =
+        rulesButtonSprite
+        .getGlobalBounds()
+        .contains(mousePos);
+
+    startButtonSprite.setColor(
+        startHovered
+        ? sf::Color(126, 126, 143, 255)
+        : sf::Color::White
+    );
+
+    exitButtonSprite.setColor(
+        exitHovered
+        ? sf::Color(126, 126, 143, 255)
+        : sf::Color::White
+    );
+
+    rulesButtonSprite.setColor(
+        rulesHovered
+        ? sf::Color(126, 126, 143, 255)
+        : sf::Color::White
+    );
 }
 
 void GameRenderer::renderMenu(
@@ -109,6 +215,7 @@ void GameRenderer::renderMenu(
     window.draw(menuBackgroundSprite);
     window.draw(startButtonSprite);
     window.draw(exitButtonSprite);
+    window.draw(rulesButtonSprite);
 
     window.display();
 }
@@ -281,6 +388,236 @@ void GameRenderer::updateGameOverButtonHover(
     );
 }
 
+void GameRenderer::renderRulesScreen(
+    sf::RenderWindow& window,
+    const sf::Font& font,
+    bool fontLoaded
+) {
+    window.clear(sf::Color::Black);
+
+    window.draw(menuBackgroundSprite);
+
+    sf::RectangleShape overlay({
+        static_cast<float>(window.getSize().x),
+        static_cast<float>(window.getSize().y)
+        });
+
+    overlay.setPosition({ 0.0f, 0.0f });
+    overlay.setFillColor(sf::Color(0, 0, 0, 190));
+    window.draw(overlay);
+
+    float panelWidth = 1120.0f;
+    float panelHeight = 720.0f;
+
+    float centerX = static_cast<float>(window.getSize().x) / 2.0f;
+    float centerY = static_cast<float>(window.getSize().y) / 2.0f;
+
+    sf::RectangleShape panel({ panelWidth, panelHeight });
+    panel.setOrigin({ panelWidth / 2.0f, panelHeight / 2.0f });
+    panel.setPosition({ centerX, centerY });
+    panel.setFillColor(sf::Color(35, 30, 50, 245));
+    panel.setOutlineColor(sf::Color(200, 200, 220));
+    panel.setOutlineThickness(3.0f);
+
+    window.draw(panel);
+
+    if (!fontLoaded) {
+        window.display();
+        return;
+    }
+
+    sf::Text title(font);
+    title.setString("Game rules");
+    title.setCharacterSize(36);
+    title.setFillColor(sf::Color::White);
+
+    sf::FloatRect titleBounds = title.getLocalBounds();
+    title.setOrigin({
+        titleBounds.position.x + titleBounds.size.x / 2.0f,
+        titleBounds.position.y + titleBounds.size.y / 2.0f
+        });
+
+    title.setPosition({
+        centerX,
+        centerY - panelHeight / 2.0f + 55.0f
+        });
+
+    window.draw(title);
+
+    sf::Text leftText(font);
+    leftText.setCharacterSize(21);
+    leftText.setFillColor(sf::Color::White);
+    leftText.setLineSpacing(1.08f);
+
+    leftText.setString(
+        "Goal:\n"
+        "Defeat all enemies on the map\n"
+        "and reach the stairs.\n\n"
+
+        "Levels:\n"
+        "The game has 15 levels.\n\n"
+
+        "1-5:\n"
+        "Grass map, zombies.\n\n"
+
+        "6-10:\n"
+        "Desert map, skeletons.\n\n"
+
+        "11-15:\n"
+        "Stone map, demons."
+    );
+
+    leftText.setPosition({
+        centerX - 500.0f,
+        centerY - 245.0f
+        });
+
+    window.draw(leftText);
+
+    sf::Text controlsText(font);
+    controlsText.setCharacterSize(20);
+    controlsText.setFillColor(sf::Color::White);
+    controlsText.setLineSpacing(1.08f);
+
+    controlsText.setString(
+        "Controls:\n"
+        "Click a neighboring hex to move.\n"
+        "Click a neighboring enemy to attack."
+    );
+
+    controlsText.setPosition({
+        centerX - 500.0f,
+        centerY + 210.0f
+        });
+
+    window.draw(controlsText);
+
+    static sf::Clock pulseClock;
+
+    float pulseTime = pulseClock.getElapsedTime().asSeconds();
+    float pulseFactor = 1.0f + 0.06f * std::sin(pulseTime * 3.2f);
+
+    float baseEnemyScale = 4.8f;
+    float enemyScale = baseEnemyScale * pulseFactor;
+
+    float enemyIconX = centerX + 25.0f;
+    float enemyTextX = centerX + 95.0f;
+
+    float zombieY = centerY - 185.0f;
+    float skeletonY = centerY - 65.0f;
+    float demonY = centerY + 55.0f;
+
+    sf::Text enemiesTitle(font);
+    enemiesTitle.setCharacterSize(21);
+    enemiesTitle.setFillColor(sf::Color::White);
+    enemiesTitle.setString("Enemies:");
+    enemiesTitle.setPosition({
+        enemyTextX,
+        centerY - 245.0f
+        });
+    window.draw(enemiesTitle);
+
+    sf::Sprite zombieSprite = zombieRulesSprite;
+    zombieSprite.setScale({ enemyScale, enemyScale });
+    zombieSprite.setPosition({ enemyIconX, zombieY + 35.0f });
+    window.draw(zombieSprite);
+
+    sf::Text zombieText(font);
+    zombieText.setCharacterSize(21);
+    zombieText.setFillColor(sf::Color::White);
+    zombieText.setLineSpacing(1.08f);
+    zombieText.setString(
+        "Zombie:\n"
+        "Enemy of grass levels."
+    );
+    zombieText.setPosition({
+        enemyTextX,
+        zombieY
+        });
+    window.draw(zombieText);
+
+    sf::Sprite skeletonSprite = skeletonRulesSprite;
+    skeletonSprite.setScale({ enemyScale, enemyScale });
+    skeletonSprite.setPosition({ enemyIconX, skeletonY + 35.0f });
+    window.draw(skeletonSprite);
+
+    sf::Text skeletonText(font);
+    skeletonText.setCharacterSize(21);
+    skeletonText.setFillColor(sf::Color::White);
+    skeletonText.setLineSpacing(1.08f);
+    skeletonText.setString(
+        "Skeleton:\n"
+        "Enemy of desert levels."
+    );
+    skeletonText.setPosition({
+        enemyTextX,
+        skeletonY
+        });
+    window.draw(skeletonText);
+
+    sf::Sprite demonSprite = demonRulesSprite;
+    demonSprite.setScale({ enemyScale, enemyScale });
+    demonSprite.setPosition({ enemyIconX, demonY + 35.0f });
+    window.draw(demonSprite);
+
+    sf::Text demonText(font);
+    demonText.setCharacterSize(21);
+    demonText.setFillColor(sf::Color::White);
+    demonText.setLineSpacing(1.08f);
+    demonText.setString(
+        "Demon:\n"
+        "Enemy of stone levels."
+    );
+    demonText.setPosition({
+        enemyTextX,
+        demonY
+        });
+    window.draw(demonText);
+
+    sf::Text chestText(font);
+    chestText.setCharacterSize(20);
+    chestText.setFillColor(sf::Color::White);
+    chestText.setLineSpacing(1.08f);
+
+    chestText.setString(
+        "Chest:\n"
+        "Each map contains one chest.\n"
+        "It may restore full HP,\n"
+        "give +1 attack for 60 seconds,\n"
+        "or be empty."
+    );
+
+    chestText.setPosition({
+        enemyTextX,
+        centerY + 165.0f
+        });
+
+    window.draw(chestText);
+
+    sf::Text bottomText(font);
+    bottomText.setString(
+        "Press ESC, ENTER, SPACE or CLICK to return."
+    );
+
+    bottomText.setCharacterSize(18);
+    bottomText.setFillColor(sf::Color(255, 220, 120));
+
+    sf::FloatRect bottomBounds = bottomText.getLocalBounds();
+    bottomText.setOrigin({
+        bottomBounds.position.x + bottomBounds.size.x / 2.0f,
+        bottomBounds.position.y + bottomBounds.size.y / 2.0f
+        });
+
+    bottomText.setPosition({
+        centerX,
+        centerY + panelHeight / 2.0f - 30.0f
+        });
+
+    window.draw(bottomText);
+
+    window.display();
+}
+
 bool GameRenderer::isStartButtonClicked(
     sf::Vector2f mousePos
 ) {
@@ -293,6 +630,14 @@ bool GameRenderer::isExitButtonClicked(
     sf::Vector2f mousePos
 ) {
     return exitButtonSprite
+        .getGlobalBounds()
+        .contains(mousePos);
+}
+
+bool GameRenderer::isRulesButtonClicked(
+    sf::Vector2f mousePos
+) {
+    return rulesButtonSprite
         .getGlobalBounds()
         .contains(mousePos);
 }
