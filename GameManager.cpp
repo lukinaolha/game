@@ -21,6 +21,10 @@ GameManager::GameManager()
     ),
     hero("hero.png", 0),
     fontLoaded(false),
+    menuMusicLoaded(false),
+    gameMusicLoaded(false),
+    victoryMusicLoaded(false),
+    wastedMusicLoaded(false),
     currentLevel(1),
     maxLevel(15),
     gameAreaWidth(850.0f),
@@ -37,7 +41,46 @@ GameManager::GameManager()
 {
     window.setFramerateLimit(60);
 
+    if (menuMusic.openFromFile("start.mp3")) {
+        menuMusicLoaded = true;
+        menuMusic.setLooping(true);
+        menuMusic.setVolume(40.0f);
+        menuMusic.play();
+    }
+    else {
+        std::cout << "Cannot load menu music file: start.mp3" << std::endl;
+    }
+
+    if (gameMusic.openFromFile("music.mp3")) {
+        gameMusicLoaded = true;
+        gameMusic.setLooping(true);
+        gameMusic.setVolume(35.0f);
+    }
+
+    if (victoryMusic.openFromFile("let her go.mp3")) {
+        victoryMusicLoaded = true;
+        victoryMusic.setLooping(true);
+        victoryMusic.setVolume(40.0f);
+    }
+
+    if (wastedMusic.openFromFile("wasted.mp3")) {
+        wastedMusicLoaded = true;
+        wastedMusic.setLooping(true);
+        wastedMusic.setVolume(40.0f);
+    }
+    
+
     GameRenderer::initMenu(
+        window.getSize().x,
+        window.getSize().y
+    );
+
+    GameRenderer::initVictory(
+        window.getSize().x,
+        window.getSize().y
+    );
+
+    GameRenderer::initGameOver(
         window.getSize().x,
         window.getSize().y
     );
@@ -48,9 +91,7 @@ GameManager::GameManager()
     if (font.openFromFile("GILSANUB.ttf")) {
         fontLoaded = true;
     }
-    else {
-        std::cout << "Cannot load font file: GILSANUB.ttf" << std::endl;
-    }
+  
 
     if (!stairsTexture.loadFromFile("stairs.png")) {
         std::cout << "Cannot load stairs.png" << std::endl;
@@ -119,14 +160,76 @@ void GameManager::prepareLevel() {
 }
 
 void GameManager::goToNextLevel() {
-    currentLevel++;
-
-    if (currentLevel > maxLevel) {
-        window.close();
+    if (currentLevel >= maxLevel) {
+        showVictoryScreen();
         return;
     }
 
+    currentLevel++;
+
     prepareLevel();
+}
+
+void GameManager::showVictoryScreen() {
+    currentState = GameState::Victory;
+
+    stairsVisible = false;
+    stairsCellIndex = -1;
+
+    chestVisible = false;
+    chestCellIndex = -1;
+
+    rewardPopupVisible = false;
+    rewardPopupTitle = "";
+    rewardPopupText = "";
+
+    if (menuMusicLoaded) {
+        menuMusic.stop();
+    }
+
+    if (gameMusicLoaded) {
+        gameMusic.stop();
+    }
+
+    if (wastedMusicLoaded) {
+        wastedMusic.stop();
+    }
+
+    if (victoryMusicLoaded) {
+        victoryMusic.play();
+    }
+
+}
+
+void GameManager::showGameOverScreen() {
+    currentState = GameState::GameOver;
+
+    stairsVisible = false;
+    stairsCellIndex = -1;
+
+    chestVisible = false;
+    chestCellIndex = -1;
+
+    rewardPopupVisible = false;
+    rewardPopupTitle = "";
+    rewardPopupText = "";
+
+    if (menuMusicLoaded) {
+        menuMusic.stop();
+    }
+
+    if (gameMusicLoaded) {
+        gameMusic.stop();
+    }
+
+    if (victoryMusicLoaded) {
+        victoryMusic.stop();
+    }
+
+    if (wastedMusicLoaded) {
+        wastedMusic.play();
+    }
+
 }
 
 void GameManager::processEvents() {
@@ -140,6 +243,30 @@ void GameManager::processEvents() {
 
             if (currentState == GameState::Menu) {
                 if (keyPressed->code == sf::Keyboard::Key::Escape) {
+                    window.close();
+                }
+
+                continue;
+            }
+
+            if (currentState == GameState::Victory) {
+                if (keyPressed->code == sf::Keyboard::Key::Escape) {
+                    if (victoryMusicLoaded) {
+                        victoryMusic.stop();
+                    }
+
+                    window.close();
+                }
+
+                continue;
+            }
+
+            if (currentState == GameState::GameOver) {
+                if (keyPressed->code == sf::Keyboard::Key::Escape) {
+                    if (wastedMusicLoaded) {
+                        wastedMusic.stop();
+                    }
+
                     window.close();
                 }
 
@@ -182,9 +309,41 @@ void GameManager::processEvents() {
                 if (currentState == GameState::Menu) {
                     if (GameRenderer::isStartButtonClicked(mousePos)) {
                         currentState = GameState::Playing;
+
+                        if (menuMusicLoaded) {
+                            menuMusic.stop();
+                        }
+
+                        if (gameMusicLoaded) {
+                            gameMusic.play();
+                        }
                     }
 
                     if (GameRenderer::isExitButtonClicked(mousePos)) {
+                        window.close();
+                    }
+
+                    continue;
+                }
+
+                if (currentState == GameState::Victory) {
+                    if (GameRenderer::isVictoryButtonClicked(mousePos)) {
+                        if (victoryMusicLoaded) {
+                            victoryMusic.stop();
+                        }
+
+                        window.close();
+                    }
+
+                    continue;
+                }
+
+                if (currentState == GameState::GameOver) {
+                    if (GameRenderer::isGameOverButtonClicked(mousePos)) {
+                        if (wastedMusicLoaded) {
+                            wastedMusic.stop();
+                        }
+
                         window.close();
                     }
 
@@ -253,8 +412,16 @@ void GameManager::update() {
         return;
     }
 
+    if (currentState == GameState::Victory) {
+        return;
+    }
+
+    if (currentState == GameState::GameOver) {
+        return;
+    }
+
     if (!hero.isAlive()) {
-        window.close();
+        showGameOverScreen();
         return;
     }
 
@@ -268,6 +435,16 @@ void GameManager::update() {
 void GameManager::render() {
     if (currentState == GameState::Menu) {
         GameRenderer::renderMenu(window);
+        return;
+    }
+
+    if (currentState == GameState::Victory) {
+        GameRenderer::renderVictory(window);
+        return;
+    }
+
+    if (currentState == GameState::GameOver) {
+        GameRenderer::renderGameOver(window);
         return;
     }
 

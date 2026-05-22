@@ -11,6 +11,15 @@ sf::Sprite GameRenderer::startButtonSprite(startButtonTexture);
 sf::Texture GameRenderer::exitButtonTexture;
 sf::Sprite GameRenderer::exitButtonSprite(exitButtonTexture);
 
+sf::Texture GameRenderer::victoryPanelTexture;
+sf::Sprite GameRenderer::victoryPanelSprite(victoryPanelTexture);
+
+sf::Texture GameRenderer::victoryButtonTexture;
+sf::Sprite GameRenderer::victoryButtonSprite(victoryButtonTexture);
+
+sf::Texture GameRenderer::wastedButtonTexture;
+sf::Sprite GameRenderer::wastedButtonSprite(wastedButtonTexture);
+
 namespace RenderColors {
     const sf::Color GrassBackground(0, 0, 0, 255);
     const sf::Color DesertBackground(0, 0, 0, 255);
@@ -104,6 +113,174 @@ void GameRenderer::renderMenu(
     window.display();
 }
 
+void GameRenderer::initVictory(
+    unsigned int windowWidth,
+    unsigned int windowHeight
+) {
+    if (!victoryPanelTexture.loadFromFile("panel.png")) {
+        std::cout << "Cannot load panel.png" << std::endl;
+    }
+
+    victoryPanelSprite.setTexture(victoryPanelTexture, true);
+
+    float panelScaleX =
+        static_cast<float>(windowWidth) /
+        victoryPanelTexture.getSize().x;
+
+    float panelScaleY =
+        static_cast<float>(windowHeight) /
+        victoryPanelTexture.getSize().y;
+
+    victoryPanelSprite.setScale({
+        panelScaleX,
+        panelScaleY
+        });
+
+    if (!victoryButtonTexture.loadFromFile("victory.png")) {
+        std::cout << "Cannot load victory.png" << std::endl;
+    }
+
+    victoryButtonSprite.setTexture(victoryButtonTexture, true);
+
+    float buttonScale = 15.0f;
+
+    victoryButtonSprite.setScale({
+        buttonScale,
+        buttonScale
+        });
+
+    victoryButtonSprite.setOrigin({
+        victoryButtonTexture.getSize().x / 2.0f,
+        victoryButtonTexture.getSize().y / 2.0f
+        });
+
+    float centerX =
+        static_cast<float>(windowWidth) / 2.0f;
+
+    float centerY =
+        static_cast<float>(windowHeight) * 0.10f +
+        victoryButtonTexture.getSize().y * buttonScale / 2.0f;
+
+    victoryButtonSprite.setPosition({
+        centerX,
+        centerY
+        });
+}
+
+void GameRenderer::renderVictory(
+    sf::RenderWindow& window
+) {
+    sf::Vector2f mousePos =
+        window.mapPixelToCoords(
+            sf::Mouse::getPosition(window)
+        );
+
+    updateVictoryButtonHover(mousePos);
+
+    window.clear(sf::Color::Black);
+
+    window.draw(victoryPanelSprite);
+    window.draw(victoryButtonSprite);
+
+    window.display();
+}
+
+void GameRenderer::initGameOver(
+    unsigned int windowWidth,
+    unsigned int windowHeight
+) {
+    if (!wastedButtonTexture.loadFromFile("wasted.png")) {
+        std::cout << "Cannot load wasted.png" << std::endl;
+    }
+
+    wastedButtonSprite.setTexture(wastedButtonTexture, true);
+
+    float buttonScale = 20.0f;
+
+    wastedButtonSprite.setScale({
+        buttonScale,
+        buttonScale
+        });
+
+    wastedButtonSprite.setOrigin({
+        wastedButtonTexture.getSize().x / 2.0f,
+        wastedButtonTexture.getSize().y / 2.0f
+        });
+
+    float centerX =
+        static_cast<float>(windowWidth) / 2.0f;
+
+    float centerY =
+        static_cast<float>(windowHeight) * 0.35f +
+        wastedButtonTexture.getSize().y * buttonScale / 2.0f;
+
+    wastedButtonSprite.setPosition({
+        centerX,
+        centerY
+        });
+}
+
+void GameRenderer::renderGameOver(
+    sf::RenderWindow& window
+) {
+    sf::Vector2f mousePos =
+        window.mapPixelToCoords(
+            sf::Mouse::getPosition(window)
+        );
+
+    updateGameOverButtonHover(mousePos);
+
+    window.clear(sf::Color::Black);
+
+    window.draw(wastedButtonSprite);
+
+    window.display();
+}
+
+void GameRenderer::applyButtonHoverEffect(
+    sf::Sprite& buttonSprite,
+    float normalScale,
+    sf::Vector2f mousePos
+) {
+    bool hovered =
+        buttonSprite
+        .getGlobalBounds()
+        .contains(mousePos);
+
+    if (hovered) {
+        buttonSprite.setScale({
+            normalScale * 1.08f,
+            normalScale * 1.08f
+            });
+    }
+    else {
+        buttonSprite.setScale({
+            normalScale,
+            normalScale
+            });
+    }
+}
+
+void GameRenderer::updateVictoryButtonHover(
+    sf::Vector2f mousePos
+) {
+    applyButtonHoverEffect(
+        victoryButtonSprite,
+        15.0f,
+        mousePos
+    );
+}
+
+void GameRenderer::updateGameOverButtonHover(
+    sf::Vector2f mousePos
+) {
+    applyButtonHoverEffect(
+        wastedButtonSprite,
+        20.0f,
+        mousePos
+    );
+}
+
 bool GameRenderer::isStartButtonClicked(
     sf::Vector2f mousePos
 ) {
@@ -116,6 +293,22 @@ bool GameRenderer::isExitButtonClicked(
     sf::Vector2f mousePos
 ) {
     return exitButtonSprite
+        .getGlobalBounds()
+        .contains(mousePos);
+}
+
+bool GameRenderer::isVictoryButtonClicked(
+    sf::Vector2f mousePos
+) {
+    return victoryButtonSprite
+        .getGlobalBounds()
+        .contains(mousePos);
+}
+
+bool GameRenderer::isGameOverButtonClicked(
+    sf::Vector2f mousePos
+) {
+    return wastedButtonSprite
         .getGlobalBounds()
         .contains(mousePos);
 }

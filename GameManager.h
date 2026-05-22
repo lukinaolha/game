@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Audio.hpp>
 #include <vector>
 #include <memory>
 #include <string>
@@ -12,7 +13,9 @@
 
 enum class GameState {
     Menu,
-    Playing
+    Playing,
+    Victory,
+    GameOver
 };
 
 class GameManager {
@@ -28,6 +31,16 @@ private:
 
     sf::Font font;
     bool fontLoaded;
+
+    sf::Music menuMusic;
+    sf::Music gameMusic;
+    sf::Music victoryMusic;
+    sf::Music wastedMusic;
+
+    bool menuMusicLoaded;
+    bool gameMusicLoaded;
+    bool victoryMusicLoaded;
+    bool wastedMusicLoaded;
 
     int currentLevel;
     const int maxLevel;
@@ -58,6 +71,9 @@ private:
 
     void prepareLevel();
     void goToNextLevel();
+
+    void showVictoryScreen();
+    void showGameOverScreen();
 
     void spawnEnemies();
     void updateEnemies();

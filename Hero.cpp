@@ -18,7 +18,9 @@ Hero::Hero(
     attackBoostDurationSeconds(60.0f),
     sprite(texture)
 {
-    texture = loadTextureTransparentBlack(textureFile);
+    if (!texture.loadFromFile(textureFile)) {
+        std::cout << "Cannot load hero texture: " << textureFile << std::endl;
+    }
 
     sprite.setTexture(texture, true);
 
@@ -29,7 +31,7 @@ Hero::Hero(
 
     sprite.setScale({
         2.50f,
-        2.30f
+        2.50f
         });
 
     if (!fullHeartTexture.loadFromFile("heart_full.png")) {

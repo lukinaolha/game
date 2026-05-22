@@ -20,6 +20,15 @@ private:
     static sf::Texture exitButtonTexture;
     static sf::Sprite exitButtonSprite;
 
+    static sf::Texture victoryPanelTexture;
+    static sf::Sprite victoryPanelSprite;
+
+    static sf::Texture victoryButtonTexture;
+    static sf::Sprite victoryButtonSprite;
+
+    static sf::Texture wastedButtonTexture;
+    static sf::Sprite wastedButtonSprite;
+
 private:
     static sf::Color getBackgroundColorForLevel(
         int currentLevel
@@ -49,6 +58,12 @@ private:
         const std::string& popupText
     );
 
+    static void applyButtonHoverEffect(
+        sf::Sprite& buttonSprite,
+        float normalScale,
+        sf::Vector2f mousePos
+    );
+
 public:
     static void initMenu(
         unsigned int windowWidth,
@@ -59,11 +74,45 @@ public:
         sf::RenderWindow& window
     );
 
+    static void initVictory(
+        unsigned int windowWidth,
+        unsigned int windowHeight
+    );
+
+    static void renderVictory(
+        sf::RenderWindow& window
+    );
+
+    static void initGameOver(
+        unsigned int windowWidth,
+        unsigned int windowHeight
+    );
+
+    static void renderGameOver(
+        sf::RenderWindow& window
+    );
+
+    static void updateVictoryButtonHover(
+        sf::Vector2f mousePos
+    );
+
+    static void updateGameOverButtonHover(
+        sf::Vector2f mousePos
+    );
+
     static bool isStartButtonClicked(
         sf::Vector2f mousePos
     );
 
     static bool isExitButtonClicked(
+        sf::Vector2f mousePos
+    );
+
+    static bool isVictoryButtonClicked(
+        sf::Vector2f mousePos
+    );
+
+    static bool isGameOverButtonClicked(
         sf::Vector2f mousePos
     );
 
